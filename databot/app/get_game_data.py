@@ -71,7 +71,7 @@ def crossdomain(origin=None, methods=None, headers=None,
 # Use "/get-game-data" for public - this is where the .htaccess file is stored (not to be confused with where the Python app is stored)
 # The visualization Javascript will access datarink.com/get-game-data?gameId=###### to call the Python script
 game_json = Blueprint('blueprint_name_for_get_game_data', __name__)
-@game_json.route('/databot/get-game-data')
+@game_json.route('/databot/get-game-data/')
 
 #
 #

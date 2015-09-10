@@ -10,7 +10,7 @@ app.register_blueprint(hello_page)
 app.register_blueprint(bye_page)
 app.register_blueprint(game_json)
 
-@app.route("/databot")
+@app.route("/databot/")
 def intro():
     return "I am databot!"
 
