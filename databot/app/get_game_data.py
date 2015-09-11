@@ -7,6 +7,9 @@ import ConfigParser
 import pymysql
 import json
 
+# dbconfig.py contains db access credentials
+import dbconfig
+
 #
 #
 # Cross-domain decorator - this can be removed when hosted publicly
@@ -79,7 +82,7 @@ game_json = Blueprint('blueprint_name_for_get_game_data', __name__)
 #
 #
 
-@crossdomain(origin="*") #
+@crossdomain(origin="*")
 
 #
 #
@@ -94,12 +97,10 @@ def getGameData():
 	season = request.args.get("season")
 
 	# Database connection
-	config = ConfigParser.ConfigParser()
-	config.read("databot.config")
-	databaseUser = config.get("database", "user")
-	databasePasswd = config.get("database", "passwd")
-	databaseHost = config.get("database", "host")
-	database = config.get("database", "database")
+	databaseUser = dbconfig.user
+	databasePasswd = dbconfig.passwd
+	databaseHost = dbconfig.host
+	database = dbconfig.database
 
 	connection = pymysql.connect(user=databaseUser, passwd=databasePasswd, host=databaseHost, database=database)
 	cursor = connection.cursor()
