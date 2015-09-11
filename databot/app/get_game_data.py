@@ -3,7 +3,6 @@ from flask import request
 from pprint import pprint
 from collections import namedtuple
 from itertools import combinations
-import ConfigParser
 import pymysql
 import json
 
