@@ -153,7 +153,7 @@ def getGameList():
 		games[gameId]["date"] = r["date"]
 		games[gameId]["homeTeam"] = r["homeTeam"]
 		games[gameId]["awayTeam"] = r["awayTeam"]
-		games[gameId]["homeScore"] = r["awayScore"]
+		games[gameId]["homeScore"] = r["homeScore"]
 		games[gameId]["awayScore"] = r["awayScore"]
 		games[gameId]["lastPeriod"] = r["period"]
 		games[gameId]["lastPeriodLength"] = r["time"]
