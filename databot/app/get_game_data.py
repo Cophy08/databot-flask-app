@@ -3,8 +3,10 @@ from flask import request
 from pprint import pprint
 from collections import namedtuple
 from itertools import combinations
+from datetime import datetime
 import pymysql
 import json
+import datetime
 
 # dbconfig.py contains db access credentials
 import dbconfig
@@ -94,6 +96,8 @@ def getGameData():
 	# Get arguments from URL
 	gameId = request.args.get("gameId")
 	season = request.args.get("season")
+	team = request.args.get("team")
+	date = request.args.get("date")
 
 	# Database connection
 	databaseUser = dbconfig.user
@@ -124,7 +128,26 @@ def getGameData():
 		FROM events e
 		WHERE (e.eventType = 'pend' OR e.eventType = 'goal' OR e.eventType = 'shot' OR e.eventType = 'miss' OR e.eventType = 'block')
 		""")
-	query = query + " AND e.season = " + season + " AND e.gameId = " + gameId
+
+	# Check if enough parameters have been specified
+	# gameId + season gets priority over team + date
+	if (not date or not team) and (not gameId or not season):
+		return "Must specify a date + team combination, or a gameId + season combination"
+	elif gameId and season:
+		query = query + " AND e.season = " + season + " AND e.gameId = " + gameId
+	elif team and date:
+		# Convert date string to date object if string is not empty
+		try:
+			date = datetime.datetime.strptime(date, "%d-%m-%Y")
+			date = date.strftime('%Y-%m-%d %H:%M:%S')
+		except:
+			return "Date must be formatted as dd-mm-yyyy"
+		query = query + " AND e.date = '" + date + "' AND (e.awayTeam = '" + team + "' OR e.homeTeam = '" + team + "')"
+
+		# Clear gameId - we'll replace it with the gameId returned by the query result to ensure it's consistent with the team + date arguments
+		# Because of how the players table is structured, we'll always query the shift and player data using gameId
+		gameId = None
+		season = None
 
 	cursor.execute(query)
 	rows = cursor.fetchall()
@@ -157,6 +180,12 @@ def getGameData():
 		elif r["eventType"] == "pend":
 			periodDurations[r["period"]] = r["time"]
 
+		# If querying by team + date, then store the gameId because we'll always query the shift and player data using the gameId
+		if team and date and not gameId:
+			gameId = str(r["gameId"])
+		if team and date and not season:
+			season = str(r["season"])
+
 	# Store the duration of each period and store the team names
 	pendEvents = [e for e in eventData if e["eventType"] == "pend"]
 	teams = []
@@ -179,6 +208,7 @@ def getGameData():
 		LEFT JOIN players AS p
 			ON (p.playerId = s.playerId AND p.gameId = s.gameId and p.season = s.season)
 		""")
+
 	query = query + " WHERE s.season = " + season + " AND s.gameId = " + gameId
 
 	cursor.execute(query)
