@@ -169,7 +169,7 @@ def getGameList():
 	for gameId in games:
 
 		# Convert MySQL date object to string
-		dateString = games[gameId]["date"].strftime("%Y-%m-%d")
+		dateString = games[gameId]["date"].strftime("%d-%m-%Y")
 
 		result = {
 			"gameId": gameId,
