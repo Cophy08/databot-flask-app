@@ -150,6 +150,7 @@ def getGameList():
 		gameId = r["gameId"]
 
 		games[gameId] = dict()
+		games[gameId]["date"] = r["date"]
 		games[gameId]["homeTeam"] = r["homeTeam"]
 		games[gameId]["awayTeam"] = r["awayTeam"]
 		games[gameId]["homeScore"] = r["awayScore"]
@@ -166,8 +167,13 @@ def getGameList():
 	results = []
 
 	for gameId in games:
+
+		# Convert MySQL date object to string
+		dateString = games[gameId]["date"].strftime("%Y-%m-%d")
+
 		result = {
 			"gameId": gameId,
+			"date": dateString,
 			"homeTeam": games[gameId]["homeTeam"],
 			"awayTeam": games[gameId]["awayTeam"],
 			"homeScore": games[gameId]["homeScore"],
