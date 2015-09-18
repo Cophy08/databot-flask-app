@@ -1,7 +1,7 @@
 from flask import Blueprint
 from flask import request
 from pprint import pprint
-from datetime import datetime
+from datetime import datetime, timedelta
 import pymysql
 import json
 import datetime
@@ -92,14 +92,19 @@ game_list_json = Blueprint('blueprint_name_for_get_game_list', __name__)
 def getGameList():
 
 	# Get arguments from URL
-	season = request.args.get("season")
-	date = request.args.get("date")
+	requestDate = request.args.get("date")
+	startDate = ""
 
-
-	date = "08-10-2014"
-	date = datetime.datetime.strptime(date, "%d-%m-%Y")
-	date = date.strftime('%Y-%m-%d %H:%M:%S')
-	print date
+	if requestDate:
+		try:
+			requestDate = datetime.datetime.strptime(requestDate, "%d-%m-%Y")
+			startDate = requestDate - datetime.timedelta(days=7)
+			startDate = startDate.strftime('%Y-%m-%d %H:%M:%S')
+			requestDate = requestDate.strftime('%Y-%m-%d %H:%M:%S')
+		except:
+			return "Date must be formatted as dd-mm-yyyy"
+	else:
+		return "Specify a date"
 
 	# Database connection
 	databaseUser = dbconfig.user
@@ -124,11 +129,52 @@ def getGameList():
 		FROM events e
 		WHERE (e.eventType = 'gend')
 		""")
-	query = query + " AND e.date = '" + date + "'"
+	query = query + " AND e.date <= '" + requestDate + "' AND e.date >= '" + startDate + "'"
 
 	cursor.execute(query)
 	rows = cursor.fetchall()
 
-	pprint(rows)
+	# Get table column names
+	columns = []
+	for desc in cursor.description:
+		columns.append(desc[0])
 
-	return query
+	# Turn returned rows into a dictionary so that we can use json.dumps on it later
+	gameData = []
+	for row in rows:
+		row = dict(zip(columns, row))
+		gameData.append(row)
+
+	# Store game data
+	for r in gameData:
+		gameId = r["gameId"]
+
+		games[gameId] = dict()
+		games[gameId]["homeTeam"] = r["homeTeam"]
+		games[gameId]["awayTeam"] = r["awayTeam"]
+		games[gameId]["homeScore"] = r["awayScore"]
+		games[gameId]["awayScore"] = r["awayScore"]
+		games[gameId]["lastPeriod"] = r["period"]
+		games[gameId]["lastPeriodLength"] = r["time"]
+
+	#
+	#
+	# Output data
+	#
+	#
+
+	results = []
+
+	for gameId in games:
+		result = {
+			"gameId": gameId,
+			"homeTeam": games[gameId]["homeTeam"],
+			"awayTeam": games[gameId]["awayTeam"],
+			"homeScore": games[gameId]["homeScore"],
+			"awayScore": games[gameId]["awayScore"],
+			"lastPeriod": games[gameId]["lastPeriod"],
+			"lastPeriodLength": games[gameId]["lastPeriodLength"]
+		}
+		results.append(result)
+
+	return json.dumps(results)
